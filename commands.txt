@@ -1,0 +1,9 @@
+make -C /lib/modules/3.16.0-23-generic/build SUBDIRS=$PWD clean
+lsmod
+rmmod
+rm /dev/fifo*
+tail -f /var/log/syslog
+mknod -m 666 /dev/fifo c 240 0
+insmod ./fifo.ko
+rmmod ./fifo.ko
+!make
