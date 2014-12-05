@@ -1,18 +1,43 @@
 #include <linux/module.h>
 #include <linux/errno.h>
 #include <linux/fs.h>
+#include <linux/mutex.h>
+#include<linux/string.h>
+#include <asm/uaccess.h>
+static struct mutex my_mutex; /* shared between the threads */
 
 MODULE_AUTHOR("Viswanath");
 MODULE_DESCRIPTION("Lab 2 Solution");
 MODULE_LICENSE("GPL");
 
+static char *stringPointer[20];
 // this method is executed when reading from the module
-static int x=34;
+static int first=0;
+static int last =0;
+
+static int x=30;
+static void queueReadWrite(int isRead, char *readBuffer, const char *writtenBuf, size_t count)
+{
+printk(KERN_ALERT "Inside the x=%d:%s function\n",x, __FUNCTION__);
+mutex_lock(&my_mutex);
+if(isRead==1)
+{
+        copy_to_user(readBuffer,stringPointer[first],strlen(stringPointer[first]));
+}
+else
+{
+        copy_from_user(stringPointer[first],writtenBuf, count);
+        printk(KERN_ALERT "Inside the %s function(Write part) with string %s:%s\n",x, __FUNCTION__,writtenBuf, stringPointer[first]);
+
+}
+mutex_unlock(&my_mutex);
+}
 static ssize_t fifo_read(struct file *file, char *buf, size_t count,
                                                         loff_t *ppos)
 {
 printk(KERN_ALERT "Inside the x=%d:%s function\n",x, __FUNCTION__);
 x=x+1;
+queueReadWrite(1,buf,NULL,0);
 return 0;
 }
 
@@ -20,7 +45,9 @@ return 0;
 static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
                                                  loff_t *ppos )
 {
+
 printk(KERN_ALERT "Inside the %s function\n", __FUNCTION__);
+queueReadWrite(0,NULL,buf,count);
 return 0;
 }
 
@@ -53,16 +80,17 @@ static struct file_operations fifo_fops = {
 static int __init fifo_init(void)
 {
 printk(KERN_ALERT "Inside the %s function\n", __FUNCTION__);
-
-register_chrdev(240,"FIFO",&fifo_fops);
+mutex_init(&my_mutex); /* called only ONCE */
+register_chrdev(241,"FIFO1",&fifo_fops);
 return 0;
 }
 
 // cleanup module (executed when using rmmod)
 static void __exit fifo_cleanup(void)
 {
-unregister_chrdev(240,"FIFO");
+unregister_chrdev(241,"FIFO1");
 }
 
 module_init(fifo_init);
 module_exit(fifo_cleanup);
+                                                 
