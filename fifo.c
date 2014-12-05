@@ -26,8 +26,8 @@ if(isRead==1)
 }
 else
 {
-        copy_from_user(stringPointer[first],writtenBuf, count);
-        printk(KERN_ALERT "Inside the %s function(Write part) with string %s:%s\n",x, __FUNCTION__,writtenBuf, stringPointer[first]);
+        //copy_from_user(stringPointer[first],writtenBuf, count);
+        printk(KERN_ALERT "Inside the %s function(Write part) with string %s, count:%d\n",x, __FUNCTION__,writtenBuf,count);
 
 }
 mutex_unlock(&my_mutex);
@@ -81,14 +81,14 @@ static int __init fifo_init(void)
 {
 printk(KERN_ALERT "Inside the %s function\n", __FUNCTION__);
 mutex_init(&my_mutex); /* called only ONCE */
-register_chrdev(241,"FIFO1",&fifo_fops);
+register_chrdev(240,"FIFO",&fifo_fops);
 return 0;
 }
 
 // cleanup module (executed when using rmmod)
 static void __exit fifo_cleanup(void)
 {
-unregister_chrdev(241,"FIFO1");
+unregister_chrdev(240,"FIFO");
 }
 
 module_init(fifo_init);
